@@ -7,20 +7,22 @@ import { AddFieldDropdown } from '@/components/form-builder/AddFieldDropdown'
 import { DraggableFieldItem } from '@/components/form-builder/DraggableFieldItem'
 import { Button } from '@/components/ui/button'
 import { createEmptyField } from '@/lib/formBuilderUtils'
-import { saveForm } from '@/lib/storage'
+import { saveForm, updateForm } from '@/lib/storage'
 import { showToast } from '@/lib/showToast'
-import type { FormField, FormFieldKind } from '@/types/form'
+import type { FormField, FormFieldKind, StoredForm } from '@/types/form'
 
 interface FormCreateProps {
   /** وقتی داخل داشبورد استفاده می‌شود، بعد از ذخیره فراخوانی می‌شود و ریدایرکت انجام نمی‌شود. */
   onSaved?: () => void
+  /** برای حالت ویرایش: فرم از قبل ذخیره‌شده با مقادیر اولیه. */
+  initialForm?: StoredForm
 }
 
-export function FormCreate({ onSaved }: FormCreateProps) {
+export function FormCreate({ onSaved, initialForm }: FormCreateProps) {
   const navigate = useNavigate()
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [fields, setFields] = useState<FormField[]>([])
+  const [name, setName] = useState(initialForm?.name ?? '')
+  const [description, setDescription] = useState(initialForm?.description ?? '')
+  const [fields, setFields] = useState<FormField[]>(initialForm?.fields ?? [])
   const [nameError, setNameError] = useState('')
 
   function handleAddField(kind: FormFieldKind) {
@@ -52,19 +54,23 @@ export function FormCreate({ onSaved }: FormCreateProps) {
       return
     }
     setNameError('')
-    saveForm({
-      name: trimmedName,
-      description: description.trim(),
-      fields,
-    })
-    showToast('فرم با موفقیت ذخیره شد.', 'success')
-    setName('')
-    setDescription('')
-    setFields([])
-    if (onSaved) {
-      onSaved()
+    const data = { name: trimmedName, description: description.trim(), fields }
+    if (initialForm) {
+      updateForm(initialForm.id, data)
+      showToast('فرم با موفقیت به‌روزرسانی شد.', 'success')
+      onSaved?.()
+      if (!onSaved) navigate('/', { replace: true })
     } else {
-      navigate('/', { replace: true })
+      saveForm(data)
+      showToast('فرم با موفقیت ذخیره شد.', 'success')
+      setName('')
+      setDescription('')
+      setFields([])
+      if (onSaved) {
+        onSaved()
+      } else {
+        navigate('/', { replace: true })
+      }
     }
   }
 
@@ -139,7 +145,7 @@ export function FormCreate({ onSaved }: FormCreateProps) {
 
         <div className="flex justify-end">
           <Button type="button" onClick={handleSave}>
-            ذخیره فرم
+            {initialForm ? 'ثبت تغییرات' : 'ذخیره فرم'}
           </Button>
         </div>
       </div>
@@ -151,7 +157,9 @@ export function FormCreate({ onSaved }: FormCreateProps) {
 
   return (
     <MainContent>
-      <h1 className="mb-6 text-2xl font-bold text-center">ساخت فرم جدید</h1>
+      <h1 className="mb-6 text-2xl font-bold text-center">
+        {initialForm ? 'ویرایش فرم' : 'ساخت فرم جدید'}
+      </h1>
       {formContent}
     </MainContent>
   )

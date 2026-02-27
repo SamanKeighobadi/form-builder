@@ -37,6 +37,19 @@ export function saveForm(data: FormData): StoredForm {
   return stored
 }
 
+export function getFormById(id: string): StoredForm | undefined {
+  return getStoredForms().find((f) => f.id === id)
+}
+
+export function updateForm(id: string, data: FormData): void {
+  const forms = getStoredForms()
+  const index = forms.findIndex((f) => f.id === id)
+  if (index === -1) return
+  const existing = forms[index]
+  forms[index] = { ...data, id: existing.id, createdAt: existing.createdAt }
+  setStoredForms(forms)
+}
+
 export function deleteForm(id: string): void {
   const forms = getStoredForms().filter((f) => f.id !== id)
   setStoredForms(forms)
