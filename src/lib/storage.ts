@@ -36,3 +36,8 @@ export function saveForm(data: FormData): StoredForm {
   setStoredForms(forms)
   return stored
 }
+
+export function deleteForm(id: string): void {
+  const forms = getStoredForms().filter((f) => f.id !== id)
+  setStoredForms(forms)
+}

@@ -8,9 +8,15 @@ import { DraggableFieldItem } from '@/components/form-builder/DraggableFieldItem
 import { Button } from '@/components/ui/button'
 import { createEmptyField } from '@/lib/formBuilderUtils'
 import { saveForm } from '@/lib/storage'
+import { showToast } from '@/lib/showToast'
 import type { FormField, FormFieldKind } from '@/types/form'
 
-export function FormCreate() {
+interface FormCreateProps {
+  /** وقتی داخل داشبورد استفاده می‌شود، بعد از ذخیره فراخوانی می‌شود و ریدایرکت انجام نمی‌شود. */
+  onSaved?: () => void
+}
+
+export function FormCreate({ onSaved }: FormCreateProps) {
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -51,14 +57,19 @@ export function FormCreate() {
       description: description.trim(),
       fields,
     })
-    navigate('/', { replace: true })
+    showToast('فرم با موفقیت ذخیره شد.', 'success')
+    setName('')
+    setDescription('')
+    setFields([])
+    if (onSaved) {
+      onSaved()
+    } else {
+      navigate('/', { replace: true })
+    }
   }
 
-  return (
-    <MainContent>
-      <h1 className="mb-6 text-2xl font-bold">ساخت فرم جدید</h1>
-
-      <div className="space-y-6 max-w-2xl">
+  const formContent = (
+    <div className="space-y-6 max-w-2xl mx-auto">
         <div className="rounded-lg border bg-card p-4 space-y-4">
           <h2 className="text-sm font-medium text-muted-foreground">اطلاعات فرم</h2>
           <div className="grid gap-2">
@@ -132,6 +143,16 @@ export function FormCreate() {
           </Button>
         </div>
       </div>
+  )
+
+  if (onSaved) {
+    return formContent
+  }
+
+  return (
+    <MainContent>
+      <h1 className="mb-6 text-2xl font-bold text-center">ساخت فرم جدید</h1>
+      {formContent}
     </MainContent>
   )
 }
